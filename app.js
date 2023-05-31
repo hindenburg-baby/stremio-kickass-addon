@@ -121,7 +121,7 @@ app.get('/manifest.json', (req, res) => {
     "name": "Kickass Torrents Streams",
     "description": "Streams from Kickass Torrents",
     "types": [ "movie", "series" ],
-    "resources": { "name": "stream", "types": [ "movie", "series" ], "idPrefixes": [ "tt" ] }
+    "resources": [{ "name": "stream", "types": [ "movie", "series" ], "idPrefixes": [ "tt" ] }]
   })
 });
 
