@@ -139,7 +139,9 @@ app.get('/manifest.json', (req, res) => {
     "description": "Streams from Kickass Torrents",
     "types": [ "movie", "series" ],
     "catalogs": [],
-    "resources": [{ "name": "stream", "types": [ "movie", "series" ], "idPrefixes": [ "tt" ] }]
+    "resources": [{ "name": "stream", "types": [ "movie", "series" ], "idPrefixes": [ "tt" ] }],
+    "background": "https://kickasstorrents.to/static/images/logo.png",
+    "logo": "https://kickasstorrents.to/static/images/logo.png"
   })
 });
 
