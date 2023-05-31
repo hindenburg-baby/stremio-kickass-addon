@@ -1,7 +1,9 @@
 import axios from 'axios'
 import express from 'express'
+import cors from 'cors'
 
 const app = express();
+app.use(cors())
 const port = process.env.PORT || 7555;
 
 const headers = {
@@ -23,13 +25,6 @@ class ImdbResult {
   }
 }
 
-class MagnetLink {
-  constructor(name, link) {
-    this.name = name
-    this.link = link
-  }
-}
-
 function stripTags(h) {
   return h.replace(/<([^>]+)([ \/]*)>/gi, '').replace(/<\/([^>]+)>/, '')
 }
@@ -41,7 +36,8 @@ function katerizeSeriesIndex(seriesIndex) {
   return result  
 }
 
-async function imdbReverseLookup(imdbId) {
+async function imdbReverseLookup(imdbIdWithEpisodeIndex) {
+  const imdbId = imdbIdWithEpisodeIndex.indexOf(':') > 0 ? imdbIdWithEpisodeIndex.substr(0, imdbIdWithEpisodeIndex.indexOf(':')) : imdbIdWithEpisodeIndex
   const url = 'https://www.imdb.com/title/' + imdbId;
   const result = await axios.get(url, { headers: headers })
   if(result.status == 200) {
@@ -49,29 +45,46 @@ async function imdbReverseLookup(imdbId) {
     let seriesTitle = null
     let year = null
     let seriesIndex = null
+    if(imdbIdWithEpisodeIndex != imdbId) {
+      const p = imdbIdWithEpisodeIndex.split(':')
+      seriesIndex = `S${p[1]}E${p[2]}`
+    }
     try {
       year = result.data.match('<a([^>]+)href="\\/title\\/'+imdbId+'\\/releaseinfo([^>]+)>([0-9 \\-–]+)<\\/a>')[3]
     } catch(ex) {}
-    try {
-      seriesTitle = result.data.match(/<a([^>]+)hero-title-block__series-link([^>]+)>(.+?)<\/a>/gs)[0]
-      seriesTitle = stripTags(seriesTitle)
-    } catch(ex) {}
-    try {
-      seriesIndex = result.data.match(/<div([^>]+)hero-subnav-bar-season-episode-numbers-section([^>]+)>(.+?)<\/div>/gi)[0]
-      seriesIndex = stripTags(seriesIndex)
-    } catch(ex) {}
+    if(!seriesIndex) {
+      try {
+        seriesTitle = result.data.match(/<a([^>]+)hero-title-block__series-link([^>]+)>(.+?)<\/a>/gs)[0]
+        seriesTitle = stripTags(seriesTitle)
+      } catch(ex) {}
+      try {
+        seriesIndex = result.data.match(/<div([^>]+)hero-subnav-bar-season-episode-numbers-section([^>]+)>(.+?)<\/div>/gi)[0]
+        seriesIndex = stripTags(seriesIndex)
+      } catch(ex) {}
+    }
     return new ImdbResult(title, year, seriesTitle, seriesIndex)
   } else {
-    console.log('status: ' + result.status)
     return false
   }
 }
 
 async function getMagnetLink(url) {
   const result = await axios.get(url, {headers: headers, timeout: requestTimeout})
-  const name = result.data.match(/<span([^>]+)itemprop="name"([^>]*)>([^<]+)/)[3].trim()
-  const match = result.data.match('href="magnet\\:\\?xt([^"]+)')
-  return {name: name, url: 'magnet:?xt' + match[1]}
+  const magnetUrl = result.data.match('href="magnet\\:\\?xt([^"]+)')[1]
+  const torrentHash = result.data.match(/(?<=Torrent hash[: ]*)([a-zA-Z0-9]+)/gsi)[0].trim().toLowerCase()
+  let name = ''
+  let seeders = ''
+  let fileSize = ''
+  try {
+    name = result.data.match(/<span([^>]+)itemprop="name"([^>]*)>([^<]+)/)[3].trim()
+  } catch(ex) {}
+  try {
+    seeders = stripTags(result.data.match(/<div([^>]+)seedBlock([^>]+)>(.+?)<\/div>/gs)[2]).replace(/[^0-9]*/, '')
+  } catch(ex) {}
+  try {
+    fileSize = stripTags(result.data.match(/<div([^>]+)widgetSize([^>]+)>(.+?)<\/div>/gs)[0]).trim()
+  } catch(ex) {}
+  return {name: 'Kickass', title: `${name}\n👤 ${seeders} 💾 ${fileSize}`, infoHash: torrentHash, magnet: 'magnet:?xt' + magnetUrl}
 }
 
 async function searchTorrents(imdbResult, resourceType) {
@@ -108,9 +121,13 @@ async function searchTorrents(imdbResult, resourceType) {
 
 app.get('/stream/:type_/:videoid.json', (req, res) => {
   imdbReverseLookup(req.params.videoid).then((result) => {
-    searchTorrents(result, req.params.type_).then((streams) => {
-      res.send({streams: streams})    
-    })
+    if(result != false) {
+      try {
+        searchTorrents(result, req.params.type_).then((streams) => {
+          res.send({streams: streams})    
+        })
+      } catch(ex) {}
+    }
   })
 })
 
@@ -121,10 +138,11 @@ app.get('/manifest.json', (req, res) => {
     "name": "Kickass Torrents Streams",
     "description": "Streams from Kickass Torrents",
     "types": [ "movie", "series" ],
+    "catalogs": [],
     "resources": [{ "name": "stream", "types": [ "movie", "series" ], "idPrefixes": [ "tt" ] }]
   })
 });
 
 app.listen(port, () => {
-  console.log(`[server]: Server is running at http://localhost:${port}`);
+  console.log(`[server]: Server is running at ${port}`);
 });
