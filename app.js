@@ -1,7 +1,8 @@
-import axios from 'axios';
+import axios from 'axios'
 import express from 'express'
+
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 7555;
 
 const headers = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:108.0) Gecko/20100101 Firefox/108.0',
