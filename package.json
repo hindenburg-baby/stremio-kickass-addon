@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "test": "test",
-    "dev": "npx nodemon app.js"
+    "dev": "npx nodemon app.js",
+    "start": "node app.js"
   },
   "author": "",
   "license": "ISC",
