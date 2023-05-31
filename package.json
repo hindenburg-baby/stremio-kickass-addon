@@ -1,0 +1,21 @@
+{
+  "name": "stremio-kickass-addon",
+  "version": "0.0.1",
+  "description": "A stremio addon for kickass torrents",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "test": "test",
+    "dev": "npx nodemon app.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.4.0",
+    "express": "^4.18.2",
+    "vimdb": "^4.0.6"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
+}
