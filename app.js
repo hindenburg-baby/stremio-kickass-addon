@@ -109,13 +109,16 @@ async function searchTorrents(imdbResult, resourceType) {
       if(!match[0].match('href="([^"]*)'+resourceTypeMap[resourceType])) {
         console.log('skip: ' + resourceTypeMap[resourceType])
       }
-      const link = match[0].match(/<a([^>]+)href=('|"*)([^ >"]+)('|"*)([^>]+)cellMainLink/)
+      const link = match[0].match(/<a([^>]+)href=('|"*)([^ >"]+)('|"*)([^>]+)cellMainLink([^>]+)>(.+?)<\/a>/si)
       if(link == null) {
         continue
       }
       const url_ = 'https://kickasstorrents.to' + link[3]
-      const magnetLink = await getMagnetLink(url_)
-      streams.push(magnetLink)
+      const title = stripTags(link[7]).trim()
+      if(title.toLowerCase().startsWith(imdbResult.title.toLowerCase())) {
+        const magnetLink = await getMagnetLink(url_)
+        streams.push(magnetLink)
+      }
     }
   return streams
 }
@@ -137,7 +140,7 @@ app.get('/stream/:type_/:videoid.json', (req, res) => {
 app.get('/manifest.json', (req, res) => {
   res.send({
     "id": "com.stremio-kickass-addon",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "name": "Kickass Torrents Streams",
     "description": "Streams from Kickass Torrents",
     "types": [ "movie", "series" ],
