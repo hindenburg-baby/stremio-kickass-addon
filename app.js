@@ -48,6 +48,7 @@ async function imdbReverseLookup(imdbIdWithEpisodeIndex) {
     if(imdbIdWithEpisodeIndex != imdbId) {
       const p = imdbIdWithEpisodeIndex.split(':')
       seriesIndex = `S${p[1]}E${p[2]}`
+      seriesTitle = title
     }
     try {
       year = result.data.match('<a([^>]+)href="\\/title\\/'+imdbId+'\\/releaseinfo([^>]+)>([0-9 \\-–]+)<\\/a>')[3]
@@ -126,7 +127,9 @@ app.get('/stream/:type_/:videoid.json', (req, res) => {
         searchTorrents(result, req.params.type_).then((streams) => {
           res.send({streams: streams})    
         })
-      } catch(ex) {}
+      } catch(ex) {
+        console.log(ex)
+      }
     }
   })
 })
