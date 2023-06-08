@@ -140,7 +140,7 @@ app.get('/stream_/:type_/:videoid.json', (req, res) => {
 app.get('/manifest.json', (req, res) => {
   res.send({
     "id": "com.stremio-kickass-addon",
-    "version": "0.0.41",
+    "version": "0.0.42",
     "name": "Kickass Torrents Streams",
     "description": "Streams from Kickass Torrents",
     "types": [ "movie", "series" ],
