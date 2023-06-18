@@ -123,7 +123,7 @@ async function searchTorrents(imdbResult, resourceType) {
   return streams
 }
 
-app.get('/stream_/:type_/:videoid.json', (req, res) => {
+app.get('/stream/:type_/:videoid.json', (req, res) => {
   imdbReverseLookup(req.params.videoid).then((result) => {
     if(result != false) {
       try {
